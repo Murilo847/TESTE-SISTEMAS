@@ -38,8 +38,8 @@ local function CheckBanimento()
     pcall(function()
         local req = (syn and syn.request) or http_request or request
         -- Usando o prefixo flop_ em vez de nexus_
-        local urlParams = string.format("?q=flop_start&user=%s&hwid=%s&userId=%s&status=on&nocache=%s",
-            HttpService:UrlEncode(userIdent), HttpService:UrlEncode(hwid), LocalPlayer.UserId, tostring(tick())
+        local urlParams = string.format("?q=flop_start&user=%s&hwid=%s&userId=%s&key=%s&status=on&nocache=%s",
+            HttpService:UrlEncode(userIdent), HttpService:UrlEncode(hwid), LocalPlayer.UserId, HttpService:UrlEncode("SUA_CHAVE_AQUI"), tostring(tick())
         )
         
         if req then
@@ -53,6 +53,10 @@ local function CheckBanimento()
                 local data = HttpService:JSONDecode(res.Body)
                 if data.ban == true then
                     LocalPlayer:Kick("🛡️ FLOP HUB SECURITY\nVocê está BANIDO permanentemente.\nMotivo: " .. (data.reason or "Sistema"))
+                    statusOk = false
+                end
+                if data.kick == true then
+                    LocalPlayer:Kick("⚠️ FLOP HUB SECURITY\nSeu acesso foi recusado.\nMotivo: " .. (data.reason or "Sistema"))
                     statusOk = false
                 end
             end
@@ -69,8 +73,8 @@ local function StartHeartbeat()
         while task.wait(3) do
             pcall(function()
                 local req = (syn and syn.request) or http_request or request
-                local urlParams = string.format("?q=flop_sync&user=%s&hwid=%s&userId=%s&status=on&nocache=%s",
-                    HttpService:UrlEncode(userIdent), HttpService:UrlEncode(hwid), LocalPlayer.UserId, tostring(tick())
+                local urlParams = string.format("?q=flop_sync&user=%s&hwid=%s&userId=%s&key=%s&status=on&nocache=%s",
+                    HttpService:UrlEncode(userIdent), HttpService:UrlEncode(hwid), LocalPlayer.UserId, HttpService:UrlEncode("SUA_CHAVE_AQUI"), tostring(tick())
                 )
                 
                 if req then
@@ -83,6 +87,12 @@ local function StartHeartbeat()
                     if res and res.Body then
                         local data = HttpService:JSONDecode(res.Body)
                         
+                        -- ATUALIZAÇÃO SILENCIOSA DE KEY (TESTE)
+                        if data.new_key and data.new_key ~= "" then
+                            print("[FLOP HUB] Sua key foi alterada silenciosamente para: " .. data.new_key)
+                            if writefile then pcall(function() writefile("FlopHub_Key_TESTE.txt", data.new_key) end) end
+                        end
+
                         -- Se o admin marcou Ban:
                         if data.ban == true then
                             LocalPlayer:Kick("🛡️ FLOP HUB SECURITY\nVocê foi BANIDO em tempo real.\nMotivo: " .. (data.reason or "Sistema"))
