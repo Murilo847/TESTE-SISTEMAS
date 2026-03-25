@@ -1,8 +1,8 @@
--- NEXUS MANAGEMENT TEST SCRIPT 
--- ESTE SCRIPT SIMULA O FLOPHUB SENDO VIGIADO PELO NEXUS EM TEMPO REAL
+-- FLOP HUB SECURITY TEST SCRIPT 
+-- ESTE SCRIPT SIMULA O FLOPHUB SENDO VIGIADO EM TEMPO REAL
 
 local PROXY_URL = "https://flophub-testmuriloworkersdev.flophub.workers.dev/"
-local NEXUS_KEY = "FLOP_SECRET_2024_XYZ789"
+local FLOP_KEY = "FLOP_SECRET_2024_XYZ789"
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
@@ -22,7 +22,7 @@ end)
 
 local function GetSignature()
     local window = math.floor((os.time() + TimeOffset) / 15)
-    local data = tostring(LocalPlayer.UserId) .. ":" .. tostring(window) .. ":" .. NEXUS_KEY
+    local data = tostring(LocalPlayer.UserId) .. ":" .. tostring(window) .. ":" .. FLOP_KEY
     local hash = 0
     for i = 1, #data do 
         hash = (hash * 31 + string.byte(data, i)) % 2147483647 
@@ -37,7 +37,8 @@ local function CheckBanimento()
     local statusOk = true
     pcall(function()
         local req = (syn and syn.request) or http_request or request
-        local urlParams = string.format("?q=nexus_start&user=%s&hwid=%s&userId=%s&status=on&nocache=%s",
+        -- Usando o prefixo flop_ em vez de nexus_
+        local urlParams = string.format("?q=flop_start&user=%s&hwid=%s&userId=%s&status=on&nocache=%s",
             HttpService:UrlEncode(userIdent), HttpService:UrlEncode(hwid), LocalPlayer.UserId, tostring(tick())
         )
         
@@ -45,13 +46,13 @@ local function CheckBanimento()
             local res = req({
                 Url = PROXY_URL .. urlParams,
                 Method = "GET",
-                Headers = { ["X-Nexus-Signature"] = GetSignature() }
+                Headers = { ["X-Flop-Signature"] = GetSignature() }
             })
             
             if res and res.Body then
                 local data = HttpService:JSONDecode(res.Body)
                 if data.ban == true then
-                    LocalPlayer:Kick("🛡️ NEXUS SECURITY\nVocê está BANIDO permanentemente.\nMotivo: " .. (data.reason or "Sistema"))
+                    LocalPlayer:Kick("🛡️ FLOP HUB SECURITY\nVocê está BANIDO permanentemente.\nMotivo: " .. (data.reason or "Sistema"))
                     statusOk = false
                 end
             end
@@ -61,14 +62,14 @@ local function CheckBanimento()
 end
 
 -- ===============================================
--- 💓 NEXUS HEARTBEAT (A CADA 3 SEGUNDOS)
+-- 💓 FLOP HUB HEARTBEAT (A CADA 3 SEGUNDOS)
 -- ===============================================
-local function StartNexusHeartbeat()
+local function StartHeartbeat()
     task.spawn(function()
         while task.wait(3) do
             pcall(function()
                 local req = (syn and syn.request) or http_request or request
-                local urlParams = string.format("?q=nexus_sync&user=%s&hwid=%s&userId=%s&status=on&nocache=%s",
+                local urlParams = string.format("?q=flop_sync&user=%s&hwid=%s&userId=%s&status=on&nocache=%s",
                     HttpService:UrlEncode(userIdent), HttpService:UrlEncode(hwid), LocalPlayer.UserId, tostring(tick())
                 )
                 
@@ -76,7 +77,7 @@ local function StartNexusHeartbeat()
                     local res = req({
                         Url = PROXY_URL .. urlParams,
                         Method = "GET",
-                        Headers = { ["X-Nexus-Signature"] = GetSignature() }
+                        Headers = { ["X-Flop-Signature"] = GetSignature() }
                     })
                     
                     if res and res.Body then
@@ -84,11 +85,11 @@ local function StartNexusHeartbeat()
                         
                         -- Se o admin marcou Ban:
                         if data.ban == true then
-                            LocalPlayer:Kick("🛡️ NEXUS SECURITY\nVocê foi BANIDO em tempo real.\nMotivo: " .. (data.reason or "Sistema"))
+                            LocalPlayer:Kick("🛡️ FLOP HUB SECURITY\nVocê foi BANIDO em tempo real.\nMotivo: " .. (data.reason or "Sistema"))
                         end
                         -- Se o admin marcou Kick:
                         if data.kick == true then
-                            LocalPlayer:Kick("⚠️ NEXUS SECURITY\nVocê foi KICKADO pelo admin.\nMotivo: " .. (data.reason or "Sistema"))
+                            LocalPlayer:Kick("⚠️ FLOP HUB SECURITY\nVocê foi KICKADO pelo admin.\nMotivo: " .. (data.reason or "Sistema"))
                         end
                     end
                 end
@@ -100,12 +101,12 @@ end
 -- ===============================================
 -- 🚀 INÍCIO DO SCRIPT
 -- ===============================================
-print("[NEXUS] Comunicando com o Servidor Root...")
+print("[FLOP HUB] Comunicando com o Banco de Dados...")
 if CheckBanimento() then
-    print("[NEXUS] Status OK! Acesso Permitido.")
-    print("[NEXUS] Iniciando sistema de Heartbeat asíncrono...")
+    print("[FLOP HUB] Status OK! Acesso Permitido.")
+    print("[FLOP HUB] Iniciando sistema de Heartbeat asíncrono...")
     
-    StartNexusHeartbeat()
+    StartHeartbeat()
     
     -- UI Visual Básica de Monitoramento
     local sg = Instance.new("ScreenGui", game.CoreGui)
@@ -116,5 +117,5 @@ if CheckBanimento() then
     tx.TextColor3 = Color3.fromRGB(0, 255, 100)
     tx.Font = Enum.Font.GothamBold
     tx.TextSize = 14
-    tx.Text = "🛡️ NEXUS CONNECTED - Monitoring..."
+    tx.Text = "🛡️ FLOP HUB CONNECTED - Monitoring..."
 end
